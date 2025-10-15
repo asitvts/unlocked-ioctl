@@ -1,0 +1,175 @@
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/uaccess.h>
+
+#define DEVICE_NAME "my_device"
+#define CLASS_NAME "my_class"
+
+
+#define IOCTL_MAGIC 'k'
+#define IOCTL_CMD_GET _IOR(IOCTL_MAGIC,1,int)
+#define IOCTL_CMD_SET _IOW(IOCTL_MAGIC,2,int)
+
+
+
+static dev_t dev;
+static struct class* class;
+static struct device* device;
+static struct cdev my_cdev;
+static int major_number;
+
+
+
+
+static int my_open(struct inode* inode,struct file* file){
+	pr_info("device open\n");
+	return 0;
+}
+
+static int my_release(struct inode* inode, struct file* file){
+	pr_info("device closd\n");
+	return 0;
+}
+
+static ssize_t my_read(struct file* file, char __user *buf, size_t len, loff_t* offset){
+	pr_info("read called by device\n");
+	return 0;
+}
+
+
+static ssize_t my_write(struct file* file, const char __user *buf, size_t len, loff_t* offset){
+	pr_info("write called by device\n");
+	return 0;
+}
+
+
+
+static int stored_value=0;
+
+static long my_ioctl(struct file* file, unsigned int cmd, unsigned long arg){
+	
+	int value;
+	
+	switch(cmd){
+		
+		case IOCTL_CMD_GET:
+			pr_info("get called\n");
+			if(copy_to_user((int __user *)arg,&stored_value, sizeof(stored_value))){
+				pr_info("failed copy to user\n");
+				return -EFAULT;
+			}
+			
+			break;
+		
+		case IOCTL_CMD_SET:
+			pr_info("set called\n");
+			if(copy_from_user(&value, (int __user *)arg, sizeof(stored_value))){
+				pr_info("failed copy from user\n");
+				return -EFAULT;
+			}
+			stored_value=value;
+			pr_info("value of stored_value set to : %d\n", stored_value);
+			
+			break;
+		
+		default:
+			pr_info("invalid ioctl command");
+			return -EINVAL;
+	}
+	
+	return 0;
+
+}
+
+
+
+static struct file_operations fops={
+	.read = my_read,
+	.write = my_write,
+	.open = my_open,
+	.release = my_release,
+	.unlocked_ioctl = my_ioctl,
+	.owner = THIS_MODULE,
+};
+
+
+static int __init my_init(void){
+	
+	int maj_ret = alloc_chrdev_region(&dev, 0, 1, DEVICE_NAME);
+	if(maj_ret<0){
+		pr_err("error allocating major number\n");
+		return 1;
+	}
+	
+	major_number = MAJOR(dev);
+	pr_info("major number allocated is %d\n", major_number);
+	
+	class = class_create(CLASS_NAME);
+	if(IS_ERR(class)){
+		pr_info("error creating class\n");
+		unregister_chrdev_region(dev,1);
+		return 2;
+	}
+	
+	
+	cdev_init(&my_cdev, &fops);
+	my_cdev.owner = THIS_MODULE;
+	int cdev_add_ret=cdev_add(&my_cdev, dev, 1);
+	if(cdev_add_ret<0){
+		class_destroy(class);
+		unregister_chrdev_region(dev,1);
+		pr_err("error adding character driver\n");
+		return 3;
+	}
+	
+	
+	device = device_create(class, NULL, dev, NULL, DEVICE_NAME);
+	if(IS_ERR(device)){
+		cdev_del(&my_cdev);
+		class_destroy(class);
+		unregister_chrdev_region(dev,1);
+		pr_err("error creating the device in /dev \n");
+		return 4;
+	}
+	
+	pr_info("device created successfully\n");
+
+	return 0;
+}
+
+
+static void __exit my_exit(void){
+	
+	pr_info("clean up started\n");
+	
+	device_destroy(class,dev);
+	cdev_del(&my_cdev);
+	class_destroy(class);
+	unregister_chrdev_region(dev,1);
+	
+	
+	pr_info("clean up done\n");
+
+	return;
+}
+
+
+
+
+
+MODULE_AUTHOR("asit");
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("character driver using ioctl");
+
+module_init(my_init);
+module_exit(my_exit);
+
+
+
+
+
+
