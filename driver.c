@@ -137,6 +137,17 @@ static int __init my_init(void){
 	}
 	
 	pr_info("device created successfully\n");
+	
+	
+	pr_info("checking the info of IOCTL commands:\n");
+	char magic = _IOC_TYPE(IOCTL_CMD_GET);
+	int size = _IOC_SIZE(IOCTL_CMD_GET);
+	int nr = _IOC_NR(IOCTL_CMD_GET);
+	int dir = _IOC_DIR(IOCTL_CMD_GET);
+	pr_info("checking the magic number of IOCTL_CMD_GET : %c\n", magic);
+	pr_info("checking the size of IOCTL_CMD_GET : %c\n", size);
+	pr_info("checking the nr of IOCTL_CMD_GET : %c\n", nr);
+	pr_info("checking the dir of IOCTL_CMD_GET : %c\n", dir);
 
 	return 0;
 }
