@@ -58,6 +58,10 @@ static long my_ioctl(struct file* file, unsigned int cmd, unsigned long arg){
 		
 		case IOCTL_CMD_GET:
 			pr_info("get called\n");
+			if(!access_ok( (int __user *) arg, sizeof(int)) ){
+				pr_info("invalid pointer\n");
+				return -EINVAL;
+			}
 			if(copy_to_user((int __user *)arg,&stored_value, sizeof(stored_value))){
 				pr_info("failed copy to user\n");
 				return -EFAULT;
@@ -67,6 +71,10 @@ static long my_ioctl(struct file* file, unsigned int cmd, unsigned long arg){
 		
 		case IOCTL_CMD_SET:
 			pr_info("set called\n");
+			if(!access_ok( (int __user *) arg, sizeof(int)) ){
+				pr_info("invalid pointer\n");
+				return -EINVAL;
+			}
 			if(copy_from_user(&value, (int __user *)arg, sizeof(stored_value))){
 				pr_info("failed copy from user\n");
 				return -EFAULT;
@@ -78,7 +86,7 @@ static long my_ioctl(struct file* file, unsigned int cmd, unsigned long arg){
 		
 		default:
 			pr_info("invalid ioctl command");
-			return -EINVAL;
+			return -ENOTTY;
 	}
 	
 	return 0;

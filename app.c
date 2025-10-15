@@ -2,6 +2,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <stdlib.h>
 
 #define IOCTL_MAGIC 'k'
@@ -12,10 +13,13 @@
 int main(){
 
 	int fd = open("/dev/my_device", O_RDWR);
+	printf("fd=%d, errno=%d\n", fd, errno);
 	if(fd<0){
-		printf("error opening device\n");
+		printf("error opening device: errno=%d\n", errno);
+		// Let's avoid strerror for now
 		return 1;
-	}	
+	}
+
 	
 	int val = 1234;
 	int ret=ioctl(fd, IOCTL_CMD_SET, &val);
