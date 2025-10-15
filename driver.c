@@ -148,6 +148,8 @@ static int __init my_init(void){
 	pr_info("checking the size of IOCTL_CMD_GET : %c\n", size);
 	pr_info("checking the nr of IOCTL_CMD_GET : %c\n", nr);
 	pr_info("checking the dir of IOCTL_CMD_GET : %c\n", dir);
+	
+	// direction 1,2,3,4 none, write, read ,readwrite respectively
 
 	return 0;
 }
