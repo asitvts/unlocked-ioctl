@@ -13,6 +13,7 @@
 #define IOCTL_MAGIC 'k'
 #define IOCTL_CMD_GET _IOR(IOCTL_MAGIC,1,int)
 #define IOCTL_CMD_SET _IOW(IOCTL_MAGIC,2,int)
+#define IOCTL_CMD_MEMSET_NEGATIVE_ONE _IO(IOCTL_MAGIC,3)
 
 
 
@@ -22,7 +23,7 @@ static struct device* device;
 static struct cdev my_cdev;
 static int major_number;
 
-
+static int arr[10];
 
 
 static int my_open(struct inode* inode,struct file* file){
@@ -82,6 +83,16 @@ static long my_ioctl(struct file* file, unsigned int cmd, unsigned long arg){
 			stored_value=value;
 			pr_info("value of stored_value set to : %d\n", stored_value);
 			
+			break;
+		case IOCTL_CMD_MEMSET_NEGATIVE_ONE:
+			pr_info("memset on global array called\n");
+			memset(arr,-1,sizeof(arr));
+			
+			pr_info("current values in global array are\n");
+			for(int i=0; i<10; i++){
+				pr_info("%d ",arr[i]);
+			}
+			pr_info("\n");
 			break;
 		
 		default:
@@ -146,7 +157,13 @@ static int __init my_init(void){
 	
 	pr_info("device created successfully\n");
 	
-	
+	memset(arr,0,sizeof(arr));
+	pr_info("current values in global array are\n");
+	for(int i=0; i<10; i++){
+		pr_info("%d ",arr[i]);
+	}
+	pr_info("\n");
+	/*
 	pr_info("checking the info of IOCTL commands:\n");
 	char magic = _IOC_TYPE(IOCTL_CMD_GET);
 	int size = _IOC_SIZE(IOCTL_CMD_GET);
@@ -156,6 +173,7 @@ static int __init my_init(void){
 	pr_info("checking the size of IOCTL_CMD_GET : %c\n", size);
 	pr_info("checking the nr of IOCTL_CMD_GET : %c\n", nr);
 	pr_info("checking the dir of IOCTL_CMD_GET : %c\n", dir);
+	*/
 	
 	// direction 1,2,3,4 none, write, read ,readwrite respectively
 

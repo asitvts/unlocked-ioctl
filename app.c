@@ -8,6 +8,7 @@
 #define IOCTL_MAGIC 'k'
 #define IOCTL_CMD_GET _IOR(IOCTL_MAGIC,1,int)
 #define IOCTL_CMD_SET _IOW(IOCTL_MAGIC,2,int)
+#define IOCTL_CMD_MEMSET_NEGATIVE_ONE _IO(IOCTL_MAGIC,3)
 
 
 int main(){
@@ -38,6 +39,13 @@ int main(){
 	}
 	
 	printf("received : %d\n", ret_val);
+	
+	
+	ret = ioctl(fd, IOCTL_CMD_MEMSET_NEGATIVE_ONE,0);
+	if(ret!=0){
+		printf("some kind of error in CMD_MEMSET_NEGATIVE_ONE\n");
+		return 4;
+	}
 	
 	close(fd);
 	
